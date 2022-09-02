@@ -1,0 +1,46 @@
+name: untitled
+description: A new Flutter project.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.18.0 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  get: ^4.6.5
+  webview_flutter: ^3.0.4
+
+  # firebase
+  firebase_core: ^1.21.1
+  firebase_auth: ^3.7.0
+  cloud_firestore: ^3.4.6
+
+  # kakao map
+  kakaomap_webview: ^0.6.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: NanumMyeongjo
+      fonts:
+        - asset: assets/font/NanumMyeongjo-Bold.ttf
+        - asset: assets/font/NanumMyeongjo-ExtraBold.ttf
+        - asset: assets/font/NanumMyeongjo-Regular.ttf
+
+    - family: DoHyeon
+      fonts:
+        - asset: assets/font/DoHyeon-Regular.ttf
+  # assets:
+  #   - images/a_dot_burr.jpeg
+  #   - images/a_dot_ham.jpeg

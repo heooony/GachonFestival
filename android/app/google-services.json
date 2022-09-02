@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "160055411253",
+    "firebase_url": "https://gcfestival-d623e-default-rtdb.firebaseio.com",
+    "project_id": "gcfestival-d623e",
+    "storage_bucket": "gcfestival-d623e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:160055411253:android:1891bf2994bb96929d677c",
+        "android_client_info": {
+          "package_name": "com.application.untitled"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "160055411253-0dbng7h3lc966fqkg4hdeqi62t09bo3v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyY7ptyzKna0tHX3tZJP_EBiMMHzxarDg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "160055411253-0dbng7h3lc966fqkg4hdeqi62t09bo3v.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "160055411253-vd62vsv74o7945nm74aa7hk48sub5qg1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.application.untitled"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
