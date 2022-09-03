@@ -8,8 +8,15 @@ class MajorListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Stream<QuerySnapshot> majorsStream = FirebaseFirestore.instance.collection('majors').snapshots();
+    Stream<QuerySnapshot> majorsStream = FirebaseFirestore.instance.collection('majors').orderBy('name').snapshots();
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.black,
+        elevation: 0.0,
+        title: Text('학과 리스트'),
+        centerTitle: true,
+      ),
       body: StreamBuilder<QuerySnapshot>(
         stream: majorsStream,
         builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -18,7 +25,7 @@ class MajorListView extends StatelessWidget {
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Text("Loading");
+            return Center(child: Text("Loading"));
           }
 
           return ListView(

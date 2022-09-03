@@ -19,8 +19,13 @@ dependencies:
   firebase_auth: ^3.7.0
   cloud_firestore: ^3.4.6
 
-  # kakao map
-  kakaomap_webview: ^0.6.2
+  # image provider
+  photo_view: ^0.14.0
+
+  # google map service
+  google_maps_flutter: ^2.2.0
+  google_maps_flutter_web: ^0.4.0+2
+  custom_map_markers: ^0.0.1
 
 dev_dependencies:
   flutter_test:
@@ -41,6 +46,5 @@ flutter:
     - family: DoHyeon
       fonts:
         - asset: assets/font/DoHyeon-Regular.ttf
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/images/

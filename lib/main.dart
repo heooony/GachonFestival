@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:untitled/major_list.dart';
 import 'firebase_options.dart';
+import 'main_view.dart';
 
 Future<void> main() async {
   // Firebase initialize
@@ -20,14 +21,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Flutter Demoo',
+      title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
         fontFamily: 'DoHyeon',
         primaryColor: Colors.black.withOpacity(0.8),
       ),
-      home: MajorListView(),
+      home: MainView(),
     );
   }
 }
