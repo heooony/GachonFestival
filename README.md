@@ -1,16 +1,5 @@
-# untitled
+# Gachon Festival
+9월 20일부터 22일까지 진행하는 가천대 축제에 대해 우리의 아이디어를 검증하려고 합니다.
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. 가천 코코네스쿨에 대한 이미지를 홍보하는 것
+2. Wadpik의 아이디어를 검증하는 것
