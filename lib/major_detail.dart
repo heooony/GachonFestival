@@ -1,174 +1,227 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'model/major.dart';
+
 class MajorDetailView extends StatelessWidget {
-  var id = Get.arguments;
 
   @override
   Widget build(BuildContext context) {
-    var major = FirebaseFirestore.instance.collection('majors').doc(id).get();
+
+    Major major = Get.arguments;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
         elevation: 0.0,
+        title: Text("학과 부스 소개"),
       ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: major,
-        builder:
-            (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-          if (snapshot.hasError) {
-            return const Text("Something went wrong");
-          }
-
-          if (snapshot.hasData && !snapshot.data!.exists) {
-            return const Text("Document does not exist");
-          }
-
-          if (snapshot.connectionState == ConnectionState.done) {
-            Map<String, dynamic> data =
-                snapshot.data!.data() as Map<String, dynamic>;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        data['name'],
-                        style: const TextStyle(
-                            fontSize: 40, fontWeight: FontWeight.bold),
-                      ),
-                      const ColoredBox(
-                        color: Colors.black,
-                        child: SizedBox(
-                          width: 30,
-                          height: 2,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      Text(
-                        data['intro'],
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                    ],
-                  ),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(15.0),
-                      margin: const EdgeInsets.symmetric(horizontal: 20.0),
-                      decoration: BoxDecoration(
-                          color: Color(0xFFEEEEEE),
-                          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.black.withOpacity(0.12),
-                                blurRadius: 5.0,
-                                offset: Offset(4, 4))
-                          ]),
-                      child: buildStatusText(data),
-                    ),
-                    Expanded(
-                      child: Wrap(
-                        spacing: 10.0,
-                        runSpacing: 10.0,
-                        children: [
-                          HashTag(
-                            content: "술파는 곳",
-                          ),
-                          HashTag(
-                            content: "안주",
-                          ),
-                          HashTag(
-                            content: "사람 없어서 한가해요",
-                          ),
-                          HashTag(
-                            content: "아무나 와줘요",
-                          ),
-                          HashTag(
-                            content: "비전타워 옆",
-                          ),
-                          HashTag(
-                            content: "먹태는 팔아요",
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 10.0, horizontal: 20.0),
-                  child: Text(
-                    "위치",
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 20.0,
+            ),
+            DetailInfoCard(major: major),
+            SizedBox(
+              height: 20.0,
+            ),
+            Container(
+              width: double.infinity,
+              margin: EdgeInsets.symmetric(horizontal: 20.0),
+              padding: EdgeInsets.all(20.0),
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.12),
+                        offset: Offset(0, 0),
+                        blurRadius: 11,
+                        spreadRadius: 0)
+                  ]),
+              child: Column(
+                children: [
+                  Text(
+                    "메뉴",
                     style: TextStyle(fontSize: 20.0),
                   ),
-                ),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20.0),
-                  width: double.infinity,
-                  height: 300,
-                  decoration: BoxDecoration(
-                    color: Colors.grey,
+                  SizedBox(
+                    height: 10.0,
                   ),
-                )
-              ],
-            );
-          }
-          return const Text("loading");
-        },
+                  for (int i = 0; i < 7; i++)
+                    Column(
+                      children: [
+                        SizedBox(
+                          height: 10.0,
+                        ),
+                        FoodListTile(menus: major.menu),
+                        SizedBox(
+                          height: 10.0,
+                        ),
+                        if (i != 6)
+                          Divider(
+                            color: Colors.black.withOpacity(0.3),
+                          ),
+                      ],
+                    )
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 20.0,
+            )
+          ],
+        ),
       ),
-    );
-  }
-
-  Text buildStatusText(Map<String, dynamic> data) {
-    String? status = data['status'];
-    Color color;
-    switch(status) {
-      case "원활": color = Colors.green; break;
-      case "보통": color = Colors.amber; break;
-      case "혼잡": color = Colors.red; break;
-      default : color = Colors.black;
-    }
-    return Text(
-      status ?? "모름",
-      style: TextStyle(color: color, fontSize: 40.0),
     );
   }
 }
 
-class HashTag extends StatelessWidget {
-  HashTag({required this.content});
+class FoodListTile extends StatelessWidget {
+  FoodListTile({required this.menus});
+  final LinkedHashMap<String, dynamic> menus;
 
-  final String content;
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListView.builder(
+          itemCount: menus.length,
+            itemBuilder: (BuildContext context, int index) {
+              return Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        "김치볶음밥",
+                        style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(
+                        width: 10.0,
+                      ),
+                      Text(
+                        "6000원",
+                        style: TextStyle(fontSize: 15.0),
+                      )
+                    ],
+                  ),
+                  SizedBox(
+                    height: 5.0,
+                  ),
+                  Text(
+                    "어머니께서 해준 것 같은 정말 맛있는 김치볶음밥",
+                    style: TextStyle(color: Colors.grey, fontSize: 15),
+                  )
+                ],
+              );
+            }
+        )
+      ],
+    );
+  }
+}
+
+class DetailInfoCard extends StatelessWidget {
+  DetailInfoCard({required this.major});
+
+  final major;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 2.0, horizontal: 10.0),
+      width: double.infinity,
+      height: 190,
+      margin: EdgeInsets.symmetric(horizontal: 20.0),
+      padding: EdgeInsets.all(30.0),
       decoration: BoxDecoration(
-          color: Color(0xFFEEEEEE),
+          color: Colors.white,
           borderRadius: BorderRadius.all(Radius.circular(20.0)),
           boxShadow: [
             BoxShadow(
                 color: Colors.black.withOpacity(0.12),
-                blurRadius: 5.0,
-                offset: Offset(4, 4))
+                offset: Offset(0, 0),
+                blurRadius: 11,
+                spreadRadius: 0)
           ]),
-      child: Text(
-        "#${content}",
-        style: TextStyle(
-          color: Colors.black.withOpacity(0.7),
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            major.major,
+            style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.favorite,
+                size: 14,
+                color: Colors.black.withOpacity(0.8),
+              ),
+              SizedBox(
+                width: 1.0,
+              ),
+              Text(
+                "13",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black.withOpacity(0.7),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  major.intro,
+                  maxLines: 3,
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ),
+              SizedBox(
+                width: 15.0,
+              ),
+              Container(
+                width: 70,
+                height: 70,
+                padding: const EdgeInsets.all(15.0),
+                decoration: BoxDecoration(
+                  color: statusColorBrain(major.status),
+                  borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                ),
+                child: Center(
+                  child: Text(
+                    statusTextBrain(major.status),
+                    style: TextStyle(color: Colors.white, fontSize: 20.0),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
+  }
+
+  Color statusColorBrain(int status) {
+    if (status == 0) return Colors.green;
+    else if (status == 1) return Colors.amber;
+    else if (status == 2) return Colors.red;
+    else return Colors.white;
+  }
+
+  String statusTextBrain(int status) {
+    if (status == 0) return "원활";
+    else if (status == 1) return "보통";
+    else if (status == 2) return "혼잡";
+    else return "모름";
   }
 }

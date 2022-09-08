@@ -22,10 +22,8 @@ dependencies:
   # image provider
   photo_view: ^0.14.0
 
-  # google map service
-  google_maps_flutter: ^2.2.0
-  google_maps_flutter_web: ^0.4.0+2
-  custom_map_markers: ^0.0.1
+  # bottom drawer
+  bottom_drawer: ^0.0.5
 
 dev_dependencies:
   flutter_test:

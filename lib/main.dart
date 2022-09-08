@@ -1,7 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:untitled/major_list.dart';
+import 'package:untitled/data_input_view.dart';
+import 'package:untitled/major_detail.dart';
 import 'firebase_options.dart';
 import 'main_view.dart';
 
