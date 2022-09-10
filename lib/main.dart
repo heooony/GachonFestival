@@ -1,10 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:untitled/data_input_view.dart';
-import 'package:untitled/major_detail.dart';
-import 'firebase_options.dart';
-import 'main_view.dart';
+import 'package:untitled/views/wadpik_admin_view.dart';
+import 'utils/firebase_options.dart';
+import 'views/main_view.dart';
 
 Future<void> main() async {
   // Firebase initialize

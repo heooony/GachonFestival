@@ -1,34 +1,35 @@
 import 'dart:collection';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'group.dart';
 
-class Major {
+class Major extends Group{
   Major({
     required this.intro,
-    required this.major,
+    required this.title,
     required this.menu,
     required this.openOrClose,
     required this.password,
     required this.status,
     required this.xPosition,
     required this.yPosition
-  });
+  }) : super(title, intro, openOrClose, xPosition, yPosition);
 
   String? intro;
-  String? major;
+  String? title;
   LinkedHashMap<String, dynamic> menu;
   int? openOrClose;
   String? password;
   int? status;
   double? xPosition;
   double? yPosition;
+  String iconImagePath = "assets/images/major-pin.png";
 
   factory Major.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot,
       SnapshotOptions? options) {
     final data = snapshot.data();
     return Major(
       intro: data?['intro'],
-      major: data?['major'],
+        title: data?['title'],
       menu: data?['menu'],
       openOrClose: data?['openOrClose'],
       password: data?['password'],
@@ -41,7 +42,7 @@ class Major {
   Map<String, dynamic> toFirestore() {
     return {
       if (intro != null) "intro": intro,
-      if (major != null) "major": major,
+      if (title != null) "major": title,
       if (menu != null) "menus": menu,
       if (openOrClose != null) "openOrClose": openOrClose,
       if (password != null) "password": password,
