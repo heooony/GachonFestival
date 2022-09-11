@@ -46,23 +46,7 @@ class DetailCard extends StatelessWidget {
                       buildIcon()
                     ],
                   ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.favorite,
-                        size: 14,
-                        color: Colors.black.withOpacity(0.8),
-                      ),
-                      SizedBox(
-                        width: 1.0,
-                      ),
-                      Text("13",
-                          style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.black.withOpacity(0.7))),
-                    ],
-                  ),
+                  buildLikes(),
                   Spacer(),
                   Row(
                     children: [
@@ -107,6 +91,29 @@ class DetailCard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget buildLikes() {
+    if(group is Major) {
+      Major major = group as Major;
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.favorite,
+            size: 14,
+            color: Colors.black.withOpacity(0.8),
+          ),
+          SizedBox(
+            width: 1.0,
+          ),
+          Text("${major.likes}",
+              style:
+              TextStyle(fontSize: 14, color: Colors.black.withOpacity(0.7))),
+        ],
+      );
+    }
+    return Container();
   }
 
   Widget buildIcon() {

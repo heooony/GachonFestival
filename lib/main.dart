@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:untitled/views/wadpik_admin_view.dart';
 import 'utils/firebase_options.dart';
 import 'views/main_view.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:crypto/crypto.dart';
 
 Future<void> main() async {
   // Firebase initialize
@@ -11,8 +15,19 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
+  // await setDevice();
   runApp(const MyApp());
+}
+
+Future<void> setDevice() async {
+  DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+  WebBrowserInfo webBrowserInfo = await deviceInfo.webBrowserInfo;
+  DatabaseReference ref = FirebaseDatabase.instance.ref("/");
+  var encode = utf8.encode(webBrowserInfo.userAgent!);
+  var saveCode = sha256.convert(encode);
+  await ref.set({
+    saveCode: " ",
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -21,7 +36,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Flutter Demo',
+      title: 'Gachon Map',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,

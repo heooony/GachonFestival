@@ -35,7 +35,7 @@ class _MainViewState extends State<MainView> {
   List<FleaMarket> fleaMarkets = [];
   List<List<Group>> groups = [];
 
-  List<String> ids = [];
+  Map<String, Major> ids = {};
 
   late final Future myFuture;
 
@@ -103,132 +103,147 @@ class _MainViewState extends State<MainView> {
       future: myFuture,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
         return Scaffold(
-            appBar: AppBar(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
-              elevation: 0.0,
-              title: Text('가천대 지도 & 혼잡도 확인'),
-            ),
-            drawer: Drawer(
-              child: DefaultTabController(
-                length: 4,
-                child: Column(
-                  children: [
-                    DrawerHeader(
-                      padding: EdgeInsets.all(0.0),
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              color: Colors.black,
-                              child: Container(
-                                margin: EdgeInsets.all(10.0),
-                                decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                        image: AssetImage("assets/images/logo.png"),
-                                        fit: BoxFit.cover
-                                    )
-                                ),
-                              ),
-                            ),
-                          ),
-                          TabBar(
-                            labelPadding: EdgeInsets.all(0.0),
-                            padding: EdgeInsets.all(0.0),
-                            indicatorColor: Colors.black,
-                            tabs: [
-                              GroupTab(
-                                text: "부스",
-                              ),
-                              GroupTab(
-                                text: "동아리",
-                              ),
-                              GroupTab(
-                                text: "푸드코트",
-                              ),
-                              GroupTab(
-                                text: "플리마켓",
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Flexible(
-                      child: TabBarView(children: [
-                        buildTabBarView(majors, width, height),
-                        buildTabBarView(clubs, width, height),
-                        buildTabBarView(foodCourts, width, height),
-                        buildTabBarView(fleaMarkets, width, height),
-                      ]),
-                    )
-                  ],
+            appBar: buildAppBar(),
+            drawer: buildDrawer(width, height),
+            body: buildMain(width, height));
+      },
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      elevation: 0.0,
+      title: Text('가천대 지도 & 혼잡도 확인'),
+    );
+  }
+
+  Stack buildMain(double width, double height) {
+    return Stack(
+      children: [
+        InteractiveViewer(
+          transformationController: transformationController,
+          maxScale: 5.0,
+          minScale: 0.5,
+          constrained: false,
+          child: Stack(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    isGroupClick = false;
+                  });
+                },
+                child: Image(
+                  image: AssetImage("assets/images/gachon-map.png"),
                 ),
               ),
-            ),
-            body: Stack(
-              children: [
-                InteractiveViewer(
-                  transformationController: transformationController,
-                  maxScale: 5.0,
-                  minScale: 0.5,
-                  constrained: false,
-                  child: Stack(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            isGroupClick = false;
-                          });
-                        },
-                        child: Image(
-                          image: AssetImage("assets/images/gachon-map.png"),
+              for (var group in groups)
+                for (int j = 0; j < group.length; j++)
+                  Positioned(
+                    left: group[j].xPosition,
+                    top: group[j].yPosition,
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          isGroupClick = true;
+                          selectedGroup = group[j];
+                          setTransformation(width, height, group[j].xPosition!,
+                              group[j].yPosition!);
+                        });
+                      },
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage(group[j].iconImagePath),
+                          ),
                         ),
                       ),
-                      for (var group in groups)
-                        for (int j = 0; j < group.length; j++)
-                          Positioned(
-                            left: group[j].xPosition,
-                            top: group[j].yPosition,
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  isGroupClick = true;
-                                  selectedGroup = group[j];
-                                  setTransformation(width, height,
-                                      group[j].xPosition!, group[j].yPosition!);
-                                });
-                              },
-                              child: Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: AssetImage(group[j].iconImagePath),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                    ),
+                  ),
+            ],
+          ),
+        ),
+        if (!isGroupClick)
+          Container()
+        else
+          GestureDetector(
+            onTap: () {
+              if (selectedGroup is Major) {
+                String id = "";
+                ids.forEach((key, value) {
+                  if (selectedGroup == value) {
+                    id = key;
+                  }
+                });
+
+                Get.to(() => MajorDetailView(), arguments: [selectedGroup, id]);
+              }
+            },
+            child: DetailCard(group: selectedGroup!),
+          )
+      ],
+    );
+  }
+
+  Drawer buildDrawer(double width, double height) {
+    return Drawer(
+      child: DefaultTabController(
+        length: 4,
+        child: Column(
+          children: [
+            DrawerHeader(
+              padding: EdgeInsets.all(0.0),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Container(
+                      color: Colors.black,
+                      child: Container(
+                        margin: EdgeInsets.all(10.0),
+                        decoration: BoxDecoration(
+                            image: DecorationImage(
+                                image: AssetImage("assets/images/logo.png"),
+                                fit: BoxFit.cover)),
+                      ),
+                    ),
+                  ),
+                  TabBar(
+                    labelPadding: EdgeInsets.all(0.0),
+                    padding: EdgeInsets.all(0.0),
+                    indicatorColor: Colors.black,
+                    tabs: [
+                      GroupTab(
+                        text: "부스",
+                      ),
+                      GroupTab(
+                        text: "동아리",
+                      ),
+                      GroupTab(
+                        text: "푸드코트",
+                      ),
+                      GroupTab(
+                        text: "플리마켓",
+                      ),
                     ],
                   ),
-                ),
-                if (!isGroupClick)
-                  Container()
-                else
-                  GestureDetector(
-                    onTap: () {
-                      if (selectedGroup is Major) {
-                        Get.to(() => MajorDetailView(),
-                            arguments: [selectedGroup, ids[selectedIndex ?? 0]]);
-                      }
-                    },
-                    child: DetailCard(group: selectedGroup!),
-                  )
-              ],
+                ],
+              ),
+            ),
+            Flexible(
+              child: TabBarView(children: [
+                buildTabBarView(majors, width, height),
+                buildTabBarView(clubs, width, height),
+                buildTabBarView(foodCourts, width, height),
+                buildTabBarView(fleaMarkets, width, height),
+              ]),
             )
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 
@@ -253,14 +268,12 @@ class _MainViewState extends State<MainView> {
             onTap: () {
               setState(
                 () {
-                  if (openOrClose) {
-                    selectedIndex = index;
-                    selectedGroup = groups[index];
-                    isGroupClick = true;
-                    setTransformation(width, height, groups[index].xPosition!,
-                        groups[index].yPosition!);
-                    Navigator.pop(context);
-                  }
+                  selectedIndex = index;
+                  selectedGroup = groups[index];
+                  isGroupClick = true;
+                  setTransformation(width, height, groups[index].xPosition!,
+                      groups[index].yPosition!);
+                  Navigator.pop(context);
                 },
               );
             },

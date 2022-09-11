@@ -2,22 +2,24 @@ import 'dart:collection';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'group.dart';
 
-class Major extends Group{
-  Major({
-    required this.intro,
-    required this.title,
-    required this.menu,
-    required this.openOrClose,
-    required this.password,
-    required this.status,
-    required this.xPosition,
-    required this.yPosition
-  }) : super(title, intro, openOrClose, xPosition, yPosition);
+class Major extends Group {
+  Major(
+      {required this.intro,
+      required this.title,
+      required this.menu,
+      required this.openOrClose,
+      required this.likes,
+      required this.password,
+      required this.status,
+      required this.xPosition,
+      required this.yPosition})
+      : super(title, intro, openOrClose, xPosition, yPosition);
 
   String? intro;
   String? title;
   LinkedHashMap<String, dynamic> menu;
   int? openOrClose;
+  int? likes;
   String? password;
   int? status;
   double? xPosition;
@@ -28,15 +30,15 @@ class Major extends Group{
       SnapshotOptions? options) {
     final data = snapshot.data();
     return Major(
-      intro: data?['intro'],
+        intro: data?['intro'],
         title: data?['title'],
-      menu: data?['menu'],
-      openOrClose: data?['openOrClose'],
-      password: data?['password'],
-      status: data?['status'],
-      xPosition: data?['xPosition'],
-      yPosition: data?['yPosition']
-    );
+        menu: data?['menu'],
+        openOrClose: data?['openOrClose'],
+        likes: data?['likes'],
+        password: data?['password'],
+        status: data?['status'],
+        xPosition: data?['xPosition'],
+        yPosition: data?['yPosition']);
   }
 
   Map<String, dynamic> toFirestore() {

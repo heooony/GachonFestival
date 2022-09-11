@@ -72,6 +72,8 @@ class _WadPikAdminViewState extends State<WadPikAdminView> {
                           'status': majors[changeIndex[i]].status
                         }).then((value) => print("clear!"));
                       }
+
+                      changeIds.clear();
                     },
                     child: Text("저장"))
               ],

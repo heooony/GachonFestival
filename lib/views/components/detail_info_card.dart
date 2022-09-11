@@ -82,7 +82,7 @@ class DetailInfoCard extends StatelessWidget {
                 width: 1.0,
               ),
               Text(
-                "13",
+                "${major.likes}",
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.black.withOpacity(0.7),
