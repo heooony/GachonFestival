@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:untitled/models/major.dart';
+import '../models/group.dart';
 
 class MainRepository {
-  Future<void> getData(List<Major> majors, Map<String, Major> ids) async {
+  Future<void> getData(List<Group> majors, Map<String, Major> ids) async {
     final ref = FirebaseFirestore.instance.collection('majors').withConverter(
       fromFirestore: Major.fromFirestore,
       toFirestore: (Major major, _) => major.toFirestore(),

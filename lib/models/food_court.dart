@@ -11,8 +11,8 @@ class FoodCourt extends Group {
   FoodCourt(this.title, this.intro, this.openOrClose, this.xPosition, this.yPosition) : super(title, intro, openOrClose, xPosition, yPosition);
 
   static List<FoodCourt> initialData = [
-    FoodCourt("1번째 푸드코트", "안녕하세요 맛있는거 팝니다~", 1, 1300, 321),
-    FoodCourt("2번째 푸드코트", "안녕하세요 맛은 없지만 그냥 팝니다~", 1, 1345, 450),
-    FoodCourt("3번째 푸드코트", "다팔아요 그냥 오세요!", 1, 1452, 467),
+    FoodCourt("1번째 푸드코트", "안녕하세요 맛있는거 팝니다~", 1, 300, 321),
+    FoodCourt("2번째 푸드코트", "안녕하세요 맛은 없지만 그냥 팝니다~", 1, 320, 350),
+    FoodCourt("3번째 푸드코트", "다팔아요 그냥 오세요!", 1, 400, 467),
   ];
 }

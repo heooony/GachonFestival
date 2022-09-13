@@ -52,3 +52,4 @@ flutter:
         - asset: assets/font/DoHyeon-Regular.ttf
   assets:
     - assets/images/
+    - assets/images/map/

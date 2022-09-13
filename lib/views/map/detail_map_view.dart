@@ -6,79 +6,82 @@ import 'package:untitled/models/flea_market.dart';
 import 'package:untitled/models/food_court.dart';
 import 'package:untitled/models/major.dart';
 import 'package:untitled/repository/main_repository.dart';
+import 'package:untitled/views/map/map_controller.dart';
 
-import '../models/group.dart';
-import 'components/detail_card.dart';
-import 'major_detail.dart';
+import '../../models/group.dart';
+import '../components/detail_card.dart';
+import '../major_detail.dart';
 
-class MainView extends StatefulWidget {
-  const MainView({Key? key}) : super(key: key);
+class DetailMapView extends StatefulWidget {
+  const DetailMapView({Key? key}) : super(key: key);
 
   @override
-  State<MainView> createState() => _MainViewState();
+  State<DetailMapView> createState() => _DetailMapView();
 }
 
-class _MainViewState extends State<MainView> {
+class _DetailMapView extends State<DetailMapView> {
   late final MainRepository _mainRepository;
+  late final MapController _mapController;
   final TransformationController transformationController =
       TransformationController();
 
   bool isGroupClick = false;
-
   Group? selectedGroup;
   int? selectedIndex;
+  late final String imagePath;
 
-  // 각 지역적 위치 리스트
-  List<Major> majors = [];
-  List<Club> clubs = [];
-  List<FoodCourt> foodCourts = [];
-  List<FleaMarket> fleaMarkets = [];
-  List<List<Group>> groups = [];
-
+  List<Group> groups = [];
   Map<String, Major> ids = {};
 
   late final Future myFuture;
 
-  /**
-   * majors, clubs, flea-merket, food-court 정보 가져오기
-   */
-  getAllData() {
-    myFuture = _mainRepository.getData(majors, ids);
-    getInitialData();
+  @override
+  void initState() {
+    _mainRepository = MainRepository();
+    _mapController = MapController();
+    // 구역 클릭시
+    // 초기 map위치 지정
+    setInitialTransformation();
+    // drawer에서 클릭시
+    checkEntryRoute();
+    super.initState();
   }
 
-  /**
-   * database 연동 x, model의 initialData 가져오기
-   */
-  void getInitialData() {
-    clubs = Club.initialData;
-    foodCourts = FoodCourt.initialData;
-    fleaMarkets = FleaMarket.initialData;
-    groups.add(majors);
-    groups.add(clubs);
-    groups.add(foodCourts);
-    groups.add(fleaMarkets);
+  void checkEntryRoute() {
+    List<Object> arguments = Get.arguments;
+    if (arguments.length == 1) {
+      groups = arguments[0] as List<Group>;
+    } else if (arguments.length != 1) {
+      groups = arguments[0] as List<Group>;
+      int index = arguments[1] as int;
+      double w = arguments[2] as double;
+      double h = arguments[3] as double;
+
+      selectedGroup = groups[index];
+      selectedIndex = index;
+      isGroupClick = true;
+      setTransformation(w, h, groups[index].xPosition!, groups[index].yPosition!);
+    }
+    imagePath = _mapController.getImagePath(groups[0]);
   }
 
   /**
    * 초기 지도 위치 세팅
    */
   void setInitialTransformation() {
-    final zoomFactor = 1.0;
-    final xTranslate = 1270.0;
-    final yTranslate = 0.0;
+    final zoomFactor = 0.5;
     transformationController.value.setEntry(0, 0, zoomFactor);
     transformationController.value.setEntry(1, 1, zoomFactor);
     transformationController.value.setEntry(2, 2, zoomFactor);
-    transformationController.value.setEntry(0, 3, -xTranslate);
-    transformationController.value.setEntry(1, 3, -yTranslate);
+    transformationController.value.setEntry(0, 3, 0.0);
+    transformationController.value.setEntry(1, 3, 0.0);
   }
 
   /**
    * 각 위치 클릭시 지도 이동, zoom 설정
    */
   void setTransformation(double w, double h, double x, double y) {
-    final zoomFactor = 2.0;
+    final zoomFactor = 0.5;
     transformationController.value.setEntry(0, 0, zoomFactor);
     transformationController.value.setEntry(1, 1, zoomFactor);
     transformationController.value.setEntry(2, 2, zoomFactor);
@@ -87,26 +90,15 @@ class _MainViewState extends State<MainView> {
   }
 
   @override
-  void initState() {
-    _mainRepository = MainRepository();
-    getAllData();
-    setInitialTransformation();
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
-    return FutureBuilder(
-      future: myFuture,
-      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-        return Scaffold(
-            appBar: buildAppBar(),
-            drawer: buildDrawer(width, height),
-            body: buildMain(width, height));
-      },
+    return Scaffold(
+      appBar: buildAppBar(),
+      endDrawer: buildDrawer(width, height),
+      body: buildMain(width, height),
+      backgroundColor: Colors.white,
     );
   }
 
@@ -115,7 +107,7 @@ class _MainViewState extends State<MainView> {
       backgroundColor: Colors.white,
       foregroundColor: Colors.black,
       elevation: 0.0,
-      title: Text('가천대 지도 & 혼잡도 확인'),
+      title: Text('Wadpik'),
     );
   }
 
@@ -124,7 +116,7 @@ class _MainViewState extends State<MainView> {
       children: [
         InteractiveViewer(
           transformationController: transformationController,
-          maxScale: 5.0,
+          maxScale: 3.0,
           minScale: 0.5,
           constrained: false,
           child: Stack(
@@ -136,34 +128,33 @@ class _MainViewState extends State<MainView> {
                   });
                 },
                 child: Image(
-                  image: AssetImage("assets/images/gachon-map.png"),
+                  image: AssetImage(imagePath),
                 ),
               ),
               for (var group in groups)
-                for (int j = 0; j < group.length; j++)
-                  Positioned(
-                    left: group[j].xPosition,
-                    top: group[j].yPosition,
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          isGroupClick = true;
-                          selectedGroup = group[j];
-                          setTransformation(width, height, group[j].xPosition!,
-                              group[j].yPosition!);
-                        });
-                      },
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage(group[j].iconImagePath),
-                          ),
+                Positioned(
+                  left: group.xPosition,
+                  top: group.yPosition,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isGroupClick = true;
+                        selectedGroup = group;
+                        setTransformation(
+                            width, height, group.xPosition!, group.yPosition!);
+                      });
+                    },
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage(group.iconImagePath),
                         ),
                       ),
                     ),
                   ),
+                ),
             ],
           ),
         ),
@@ -179,7 +170,6 @@ class _MainViewState extends State<MainView> {
                     id = key;
                   }
                 });
-
                 Get.to(() => MajorDetailView(), arguments: [selectedGroup, id]);
               }
             },
@@ -190,61 +180,7 @@ class _MainViewState extends State<MainView> {
   }
 
   Drawer buildDrawer(double width, double height) {
-    return Drawer(
-      child: DefaultTabController(
-        length: 4,
-        child: Column(
-          children: [
-            DrawerHeader(
-              padding: EdgeInsets.all(0.0),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Container(
-                      color: Colors.black,
-                      child: Container(
-                        margin: EdgeInsets.all(10.0),
-                        decoration: BoxDecoration(
-                            image: DecorationImage(
-                                image: AssetImage("assets/images/logo.png"),
-                                fit: BoxFit.cover)),
-                      ),
-                    ),
-                  ),
-                  TabBar(
-                    labelPadding: EdgeInsets.all(0.0),
-                    padding: EdgeInsets.all(0.0),
-                    indicatorColor: Colors.black,
-                    tabs: [
-                      GroupTab(
-                        text: "부스",
-                      ),
-                      GroupTab(
-                        text: "동아리",
-                      ),
-                      GroupTab(
-                        text: "푸드코트",
-                      ),
-                      GroupTab(
-                        text: "플리마켓",
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Flexible(
-              child: TabBarView(children: [
-                buildTabBarView(majors, width, height),
-                buildTabBarView(clubs, width, height),
-                buildTabBarView(foodCourts, width, height),
-                buildTabBarView(fleaMarkets, width, height),
-              ]),
-            )
-          ],
-        ),
-      ),
-    );
+    return Drawer(child: buildTabBarView(groups, width, height));
   }
 
   SizedBox buildTabBarView(List<Group> groups, double width, double height) {
