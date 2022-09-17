@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../models/club.dart';
+import '../../models/Booth.dart';
 import '../../models/group.dart';
-import '../../models/major.dart';
+import '../../models/place.dart';
 
 class DetailCard extends StatelessWidget {
   DetailCard({required this.group});
@@ -13,136 +13,166 @@ class DetailCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Spacer(),
         Stack(
           children: [
             Container(
               width: double.infinity,
-              height: 190,
-              margin: EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
-              padding: EdgeInsets.all(30.0),
+              height: 100.0,
+              padding: EdgeInsets.only(right: 20.0),
+              margin: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
               decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                  borderRadius: BorderRadius.all(Radius.circular(10.0)),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
+                        color: Colors.black.withOpacity(0.15),
                         offset: Offset(0, 0),
                         blurRadius: 11,
                         spreadRadius: 0)
                   ]),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        group.title!,
-                        style: TextStyle(
-                            fontSize: 23, fontWeight: FontWeight.bold),
-                      ),
-                      Spacer(),
-                      buildIcon()
-                    ],
+                  buildStatusBox(),
+                  SizedBox(
+                    width: 10.0,
                   ),
-                  buildLikes(),
-                  Spacer(),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          group.intro!,
-                          maxLines: 3,
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                  Expanded(
+                    flex: 3,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 8.0,
                         ),
-                      ),
-                      SizedBox(
-                        width: 15.0,
-                      ),
-                      buildStatusBox(),
-                    ],
+                        Row(
+                          children: [
+                            Container(
+                              color: Colors.amber,
+                              padding: EdgeInsets.symmetric(horizontal: 5.0),
+                              child: Text("${group.position}"),
+                            ),
+                            Spacer(),
+                            Text(
+                              Booth.values.elementAt(group.booth!).name,
+                              style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12.0,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: 3.0,
+                        ),
+                        Text(
+                          group.title!,
+                          maxLines: 1,
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black),
+                        ),
+                        SizedBox(
+                          height: 8.0,
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                group.intro!,
+                                maxLines: 2,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: 8.0,
+                        ),
+                      ],
+                    ),
                   ),
-                  Spacer(),
                 ],
               ),
             ),
-            if (group.openOrClose! == 0)
-              Container(
-                width: double.infinity,
-                height: 190,
-                margin: EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
-                padding: EdgeInsets.all(30.0),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                ),
-                child: Center(
-                  child: Text(
-                    "CLOSE",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 40.0,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
+            buildCloseFilter()
           ],
         ),
       ],
     );
   }
 
-  Widget buildLikes() {
-    if(group is Major) {
-      Major major = group as Major;
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.favorite,
-            size: 14,
-            color: Colors.black.withOpacity(0.8),
+  Container buildCloseFilter() {
+    if(group.openOrClose == 0) {
+      return Container(
+        height: 100.0,
+        padding: EdgeInsets.only(right: 20.0),
+        margin: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.7),
+          borderRadius: BorderRadius.all(
+            Radius.circular(10.0),
           ),
-          SizedBox(
-            width: 1.0,
+        ),
+        child: Center(
+          child: Text(
+            "CLOSE",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 30.0,
+            ),
           ),
-          Text("${major.likes}",
-              style:
-              TextStyle(fontSize: 14, color: Colors.black.withOpacity(0.7))),
-        ],
+        ),
       );
     }
     return Container();
   }
 
-  Widget buildIcon() {
-    if (group is Major || group is Club) {
-      return Icon(
-        Icons.arrow_forward_ios_sharp,
-        size: 14.0,
-      );
-    } else {
-      return Container();
-    }
-  }
-
-  Container buildStatusBox() {
-    Major major;
-    if (group is Major) {
-      major = group as Major;
-      return Container(
-        width: 70,
-        height: 70,
-        padding: const EdgeInsets.all(15.0),
-        decoration: BoxDecoration(
-          color: statusColorBrain(major.status!),
-          borderRadius: BorderRadius.all(Radius.circular(10.0)),
+  Widget buildStatusBox() {
+    if (group.booth == Booth.major.key || group.booth == Booth.congestion.key) {
+      return Expanded(
+        child: Container(
+          decoration: BoxDecoration(
+            color: statusColorBrain(group.status!),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(10.0),
+              bottomLeft: Radius.circular(10.0),
+            ),
+          ),
+          child: Center(
+            child: Text(
+              statusTextBrain(group.status!),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold),
+            ),
+          ),
         ),
-        child: Center(
-          child: Text(
-            statusTextBrain(major.status!),
-            style: TextStyle(color: Colors.white, fontSize: 20.0),
+      );
+    } else if (group.booth == Booth.waiting.key) {
+      return Expanded(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(10.0),
+              bottomLeft: Radius.circular(10.0),
+            ),
+          ),
+          child: Center(
+            child: Text(
+              "${group.waiting}명\n대기",
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       );

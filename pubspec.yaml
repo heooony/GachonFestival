@@ -19,6 +19,7 @@ dependencies:
   firebase_auth: ^3.7.0
   cloud_firestore: ^3.4.6
   firebase_database: ^9.1.4
+  firebase_analytics: ^9.3.4
 
   # image provider
   photo_view: ^0.14.0
@@ -28,8 +29,11 @@ dependencies:
 
   # device info
   device_info_plus: ^4.1.2
+  tab_indicator_styler: ^2.0.0
 
   crypto: ^3.0.2
+  easy_image_viewer: ^1.1.0
+  flutter_screenutil: ^5.5.4
 
 dev_dependencies:
   flutter_test:
@@ -50,6 +54,14 @@ flutter:
     - family: DoHyeon
       fonts:
         - asset: assets/font/DoHyeon-Regular.ttf
+
+    - family: pretendard
+      fonts:
+        - asset: assets/font/pretendard/Pretendard-SemiBold.otf
+        - asset: assets/font/pretendard/Pretendard-Light.otf
+        - asset: assets/font/pretendard/Pretendard-Medium.otf
+        - asset: assets/font/pretendard/Pretendard-Regular.otf
+        - asset: assets/font/pretendard/Pretendard-Thin.otf
   assets:
     - assets/images/
     - assets/images/map/

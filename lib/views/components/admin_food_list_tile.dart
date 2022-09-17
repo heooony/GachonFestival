@@ -25,7 +25,7 @@ class _AdminFoodListTileState extends State<AdminFoodListTile> {
                 children: [
                   Text(
                     widget.menu['name'],
-                    style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20.0),
                   ),
                   SizedBox(
                     width: 10.0,

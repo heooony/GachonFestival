@@ -1,39 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:untitled/models/major.dart';
+import 'package:untitled/models/group.dart';
 import 'package:untitled/repository/admin_repository.dart';
 
+import '../models/Booth.dart';
+import '../models/place.dart';
 import 'components/admin_food_list_tile.dart';
 
 class AdminView extends StatefulWidget {
-  const AdminView({Key? key}) : super(key: key);
+  AdminView({required this.callback});
+  Function callback;
 
   @override
   State<AdminView> createState() => _AdminViewState();
 }
 
 class _AdminViewState extends State<AdminView> {
-
+  TextEditingController val = TextEditingController();
   late final AdminRepository _repository;
-  late Major major;
+  int? status = 0;
+  late Group group;
   late String id;
 
   void initialGetData() {
-    List<dynamic> list = Get.arguments;
-    major = list[0];
-    id = list[1];
+    group = Get.arguments;
   }
 
   @override
   void initState() {
+    _repository = AdminRepository();
     initialGetData();
+    if (group.booth == Booth.congestion.key) {
+      status = group.status;
+    }
     super.initState();
   }
 
   @override
   void dispose() {
-    _repository = AdminRepository();
-    _repository.stateChange(major, id);
+    widget.callback(group);
     super.dispose();
   }
 
@@ -52,32 +58,134 @@ class _AdminViewState extends State<AdminView> {
           children: [
             Row(
               children: [
-                Text("Open 여부(open: check)", style: TextStyle(fontSize: 20.0),),
+                Text(
+                  "Open 여부(open: check)",
+                  style: TextStyle(fontSize: 17.0),
+                ),
                 Spacer(),
                 Checkbox(
-                    value: openOrCloseBrain(major.openOrClose!),
+                    value: openOrCloseBrain(group.openOrClose!),
                     onChanged: (value) {
                       setState(() {
-                        major.openOrClose = openOrCloseBrainInt(value!);
+                        group.openOrClose = openOrCloseBrainInt(value!);
                       });
-                    }
-                )
+                    })
               ],
             ),
-            for (var menu in major.menu.values)
-              Column(
-                children: [
-                  SizedBox(
-                    height: 10.0,
-                  ),
-                  AdminFoodListTile(menu: menu),
-                  SizedBox(
-                    height: 10.0,
-                  ),
-                ],
-              )
+            SizedBox(
+              height: 10.0,
+            ),
+            buildBody(),
+            ElevatedButton(
+              onPressed: () {
+                if (group.booth == Booth.major.key) {
+                  _repository.stateChange(group, context);
+                } else if(group.booth == Booth.waiting.key) {
+                  group.waiting = int.parse(val.text);
+                  _repository.waitingChange(group, context);
+                } else if(group.booth == Booth.congestion.key) {
+                  _repository.statusChange(group, context);
+                }
+              },
+              child: Text("저장"),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget buildBody() {
+    if (group.booth == Booth.major.key) {
+      return Expanded(
+        child: ListView.builder(
+          itemCount: group.menu!.values.length,
+          itemBuilder: (BuildContext context, int index) {
+            return Column(
+              children: [
+                SizedBox(
+                  height: 10.0,
+                ),
+                AdminFoodListTile(menu: group.menu!.values.elementAt(index)),
+                SizedBox(
+                  height: 10.0,
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } else if (group.booth == Booth.waiting.key) {
+      return Column(
+        children: [
+          SizedBox(
+            height: 10.0,
+          ),
+          Row(
+            children: [
+              Text("대기자 수", style: TextStyle(fontSize: 17.0),),
+              Spacer(),
+              Container(
+                width: 50.0,
+                height: 50.0,
+                child: TextField(
+                  keyboardType: TextInputType.number,
+                  controller: val,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp('[0-9]'))
+                  ],
+                ),
+              )
+            ],
+          ),
+          SizedBox(
+            height: 10.0,
+          ),
+        ],
+      );
+    } else if (group.booth == Booth.congestion.key) {
+      return Column(
+        children: [
+          SizedBox(
+            height: 10.0,
+          ),
+          Row(
+            children: [
+              Text("혼잡도", style: TextStyle(fontSize: 17.0),),
+              Spacer(),
+              buildGestureDetector(0, "원활"),
+              buildGestureDetector(1, "보통"),
+              buildGestureDetector(2, "혼잡"),
+            ],
+          ),
+          SizedBox(
+            height: 10.0,
+          ),
+        ],
+      );
+    }
+    return Container();
+  }
+
+  GestureDetector buildGestureDetector(int i, String name) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          group.status = i;
+          status = i;
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 5.0),
+        child: Text(
+          name,
+          style: TextStyle(
+            color: group.status == i ? Colors.white : Colors.indigo,
+            fontSize: 20.0,
+          ),
+        ),
+        decoration: BoxDecoration(
+            color: group.status == i ? Colors.indigo : Colors.white),
       ),
     );
   }
@@ -90,7 +198,9 @@ class _AdminViewState extends State<AdminView> {
   }
 
   int openOrCloseBrainInt(bool status) {
-    if (status) return 1;
-    else return 0;
+    if (status)
+      return 1;
+    else
+      return 0;
   }
 }
