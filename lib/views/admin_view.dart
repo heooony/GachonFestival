@@ -4,13 +4,11 @@ import 'package:get/get.dart';
 import 'package:untitled/models/group.dart';
 import 'package:untitled/repository/admin_repository.dart';
 
-import '../models/Booth.dart';
+import '../models/booth.dart';
 import '../models/place.dart';
 import 'components/admin_food_list_tile.dart';
 
 class AdminView extends StatefulWidget {
-  AdminView({required this.callback});
-  Function callback;
 
   @override
   State<AdminView> createState() => _AdminViewState();
@@ -22,9 +20,12 @@ class _AdminViewState extends State<AdminView> {
   int? status = 0;
   late Group group;
   late String id;
+  late Function callback;
 
   void initialGetData() {
-    group = Get.arguments;
+    List<dynamic> list = Get.arguments;
+    group = list[0];
+    callback = list[1];
   }
 
   @override
@@ -39,7 +40,7 @@ class _AdminViewState extends State<AdminView> {
 
   @override
   void dispose() {
-    widget.callback(group);
+    callback(group);
     super.dispose();
   }
 
@@ -50,7 +51,8 @@ class _AdminViewState extends State<AdminView> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
         elevation: 0.0,
-        title: Text("메뉴 품절 상태 변경"),
+        centerTitle: true,
+        title: buildAppBarTitle(),
       ),
       body: Padding(
         padding: EdgeInsets.all(20.0),
@@ -95,24 +97,50 @@ class _AdminViewState extends State<AdminView> {
     );
   }
 
+  Text buildAppBarTitle() {
+    if(group.booth == Booth.major.key) return Text("오픈여부/메뉴 품절 상태 변경");
+    else if(group.booth == Booth.waiting.key) return Text("오픈여부/대기자 변경");
+    else if(group.booth == Booth.congestion.key) return Text("오픈여부/혼잡도 변경");
+    else return Text("관리자모드");
+  }
+
   Widget buildBody() {
     if (group.booth == Booth.major.key) {
       return Expanded(
-        child: ListView.builder(
-          itemCount: group.menu!.values.length,
-          itemBuilder: (BuildContext context, int index) {
-            return Column(
-              children: [
-                SizedBox(
-                  height: 10.0,
+        child: Column(
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Text("혼잡도", style: TextStyle(fontSize: 17.0),),
+                  Spacer(),
+                  buildGestureDetector(0, "원활"),
+                  buildGestureDetector(1, "보통"),
+                  buildGestureDetector(2, "혼잡"),
+                ],
+              ),
+            ),
+            if (group.menu != null)
+              Expanded(
+                flex: 4,
+                child: ListView.builder(
+                  itemCount: group.menu!.values.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Column(
+                      children: [
+                        SizedBox(
+                          height: 10.0,
+                        ),
+                        AdminFoodListTile(menu: group.menu!.values.elementAt(index)),
+                        SizedBox(
+                          height: 10.0,
+                        ),
+                      ],
+                    );
+                  },
                 ),
-                AdminFoodListTile(menu: group.menu!.values.elementAt(index)),
-                SizedBox(
-                  height: 10.0,
-                ),
-              ],
-            );
-          },
+              ),
+          ],
         ),
       );
     } else if (group.booth == Booth.waiting.key) {

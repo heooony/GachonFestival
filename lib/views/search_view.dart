@@ -53,7 +53,18 @@ class _SearchViewState extends State<SearchView> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            child: Row(
+              children: [
+                Text(
+                  "담당자 전화번호 : 010-4195-1459",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: Row(
               children: [
                 Text(
@@ -81,7 +92,7 @@ class _SearchViewState extends State<SearchView> {
       itemBuilder: (BuildContext context, int index) {
         return GestureDetector(
           onTap: () {
-            Get.to(() => GroupDetailView(callback: callback,), arguments: matchQuery[index]);
+            Get.toNamed('/detail', arguments: [matchQuery[index], callback]);
           },
           child: DetailCard(
             group: matchQuery[index],

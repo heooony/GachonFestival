@@ -1,39 +1,30 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:untitled/models/booth.dart';
+import 'package:untitled/utils/wad_analytics.dart';
+import 'package:untitled/views/map/main_view.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/group.dart';
 import '../models/place.dart';
 import 'admin_view.dart';
 import 'components/food_list_tile.dart';
 
 class GroupDetailView extends StatefulWidget {
-  GroupDetailView({required this.callback});
-  Function callback;
-
   @override
   State<GroupDetailView> createState() => _GroupDetailViewState();
 }
 
 class _GroupDetailViewState extends State<GroupDetailView> {
-  final TransformationController transformationController =
-      TransformationController();
-
   TextEditingController controller = TextEditingController();
 
-  Group group = Get.arguments;
+  late Group group;
+  late Function refresh;
   bool isEvent = false;
 
   String? id;
-
-  void setInitialTransformation() {
-    final zoomFactor = 0.7;
-    transformationController.value.setEntry(0, 0, zoomFactor);
-    transformationController.value.setEntry(1, 1, zoomFactor);
-    transformationController.value.setEntry(2, 2, zoomFactor);
-    transformationController.value.setEntry(0, 3, 0.0);
-    transformationController.value.setEntry(1, 3, 0.0);
-  }
 
   Future<void> callback(Group updateGroup) async {
     await Future.delayed(Duration(seconds: 0)).then((value) {
@@ -43,42 +34,48 @@ class _GroupDetailViewState extends State<GroupDetailView> {
     });
   }
 
+  void setReservation() {
+    WadAnalytics.setReservation(Booth.values.elementAt(group.booth!).name);
+  }
+
+  @override
+  void initState() {
+    List<dynamic> list = Get.arguments;
+    group = list[0];
+    refresh = list[1];
+    super.initState();
+  }
+
   @override
   void dispose() {
-    if(isEvent) {
-      widget.callback();
+    if (isEvent) {
+      refresh();
     }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
         elevation: 0.0,
-        title: Text("학과 부스 소개"),
+        title: Text("부스 소개"),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack(
         children: [
-          buildBoothPlaceImage(),
           SingleChildScrollView(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                buildBoothPlaceImage(width),
                 SizedBox(
                   height: 20.0,
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Row(
-                    children: [
-                      buildStatusBadge(),
-                      SizedBox(width: 10.0,),
-                      buildOpenClose()
-                    ],
-                  ),
+                Row(
+                  children: [buildStatusBadge(), buildOpenClose()],
                 ),
                 SizedBox(
                   height: 10.0,
@@ -107,6 +104,28 @@ class _GroupDetailViewState extends State<GroupDetailView> {
                     ],
                   ),
                 ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Row(
+                    children: [
+                      Text("전화번호 : ", style: TextStyle(fontSize: 15.0, color: Colors.grey),),
+                      buildPhoneCopy(),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Row(
+                    children: [
+                      Text("계좌번호 : ", style: TextStyle(fontSize: 15.0, color: Colors.grey),),
+                      buildAccount(),
+                    ],
+                  ),
+                ),
+                if(group.link != null)
+                  buildLink(),
+                buildTime(),
+                SizedBox(height: 20.0,),
                 Container(
                   margin: EdgeInsets.all(20.0),
                   child: Column(
@@ -120,7 +139,7 @@ class _GroupDetailViewState extends State<GroupDetailView> {
                       SizedBox(
                         height: 40.0,
                       ),
-                      if (group.booth == Booth.major.key)
+                      if(group.menu != null)
                         Column(
                           children: [
                             SizedBox(
@@ -133,15 +152,137 @@ class _GroupDetailViewState extends State<GroupDetailView> {
                             ),
                           ],
                         ),
+                      SizedBox(
+                        height: 60.0,
+                      ),
                     ],
                   ),
-                ),
+                )
               ],
             ),
-          )
+          ),
+          buildReservationButton(context)
         ],
       ),
     );
+  }
+
+  Widget buildPhoneCopy() {
+    if (group.phone != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: Row(
+          children: [
+            Text(group.phone!, style: TextStyle(fontSize: 15.0, color: Colors.grey),),
+            TextButton(
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.all(5.0),
+                foregroundColor: Colors.indigo
+              ),
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: group.phone!));
+              },
+              child: Text("복사"),
+            ),
+          ],
+        ),
+      );
+    }
+    return Container();
+  }
+
+  Widget buildAccount() {
+    if (group.account != null) {
+      return Row(
+        children: [
+          Text("${group.account!}", style: TextStyle(fontSize: 15.0, color: Colors.grey)),
+          TextButton(
+            style: TextButton.styleFrom(
+                padding: EdgeInsets.all(5.0),
+                foregroundColor: Colors.indigo
+            ),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: group.account!));
+            },
+            child: Text("복사"),
+          ),
+        ],
+      );
+    }
+    return Container();
+  }
+
+  Widget buildLink() {
+    return TextButton(
+      style: TextButton.styleFrom(
+          foregroundColor: Colors.indigo
+      ),
+      onPressed: () async {
+        Uri uri = Uri.parse(group.link!);
+        if (!await launchUrl(uri)) {
+          throw 'Could not launch $uri';
+        }
+      },
+      child: Text("인스타그램 링크"),
+    );
+  }
+
+  Widget buildTime() {
+    if (group.start != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: Row(
+          children: [
+            Text("운영시간 : ${group.start}시 ~ ", style: TextStyle(fontSize: 15.0, color: Colors.grey),),
+            if(group.end != null)
+              Text("${group.end}시", style: TextStyle(fontSize: 15.0, color: Colors.grey),),
+          ],
+        ),
+      );
+    }
+    return Container();
+  }
+
+  Widget buildReservationButton(BuildContext context) {
+    if (group.booth == Booth.major.key || group.booth == Booth.waiting.key) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Spacer(),
+          ElevatedButton(
+            onPressed: () {
+              setReservation();
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    icon: Icon(Icons.face_unlock_sharp),
+                    title: const Text('예약 기능 준비 중'),
+                    content: Text("해당 기능은 열심히 개발하고 있습니다! 조금만 기다려주세요:)"),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context, 'Ok');
+                        },
+                        child: const Text('Ok'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            style: ElevatedButton.styleFrom(
+                fixedSize: Size(double.infinity, 60.0),
+                backgroundColor: Colors.indigo),
+            child: Text(
+              "자리 예약하기",
+              style: TextStyle(fontSize: 20.0),
+            ),
+          ),
+        ],
+      );
+    }
+    return Container();
   }
 
   Container buildOpenClose() {
@@ -149,6 +290,7 @@ class _GroupDetailViewState extends State<GroupDetailView> {
       return Container(
         width: 60.0,
         height: 20.0,
+        margin: EdgeInsets.only(left: 20.0),
         decoration: BoxDecoration(
           color: Colors.red,
           borderRadius: BorderRadius.all(
@@ -172,40 +314,45 @@ class _GroupDetailViewState extends State<GroupDetailView> {
         if (group.booth! == Booth.major.key ||
             group.booth! == Booth.waiting.key ||
             group.booth! == Booth.congestion.key) {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('관리자 비밀번호'),
-                content: TextFormField(
-                  controller: controller,
-                  decoration: InputDecoration(hintText: "비밀번호"),
-                ),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'Cancel'),
-                    child: const Text('Cancel'),
+          if(MainView.isMaster) {
+            Navigator.pop(context, 'Ok');
+            isEvent = true;
+            Get.toNamed('/admin', arguments: [group, callback]);
+          } else {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text('관리자 비밀번호'),
+                  content: TextFormField(
+                    controller: controller,
+                    decoration: InputDecoration(hintText: "비밀번호"),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      if (controller.text == group.password) {
-                        Navigator.pop(context, 'Ok');
-                        isEvent = true;
-                        Get.to(
-                            () => AdminView(
-                                  callback: callback,
-                                ),
-                            arguments: group);
-                      } else {
-                        Navigator.pop(context, 'Ok');
-                      }
-                    },
-                    child: const Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, 'Cancel'),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        if (controller.text == group.password || controller.text == "wad316") {
+                          if(controller.text == "wad316") {
+                            MainView.isMaster = true;
+                          }
+                          Navigator.pop(context, 'Ok');
+                          isEvent = true;
+                          Get.toNamed('/admin', arguments: [group, callback]);
+                        } else {
+                          Navigator.pop(context, 'Ok');
+                        }
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
         }
       },
       child: Text(
@@ -215,17 +362,21 @@ class _GroupDetailViewState extends State<GroupDetailView> {
     );
   }
 
-  Container buildBoothPlaceImage() {
-    setInitialTransformation();
-    return Container(
-      height: 270.0.h,
-      child: InteractiveViewer(
-        transformationController: transformationController,
-        minScale: 0.5,
-        constrained: false,
+  ConstrainedBox buildBoothPlaceImage(double widthSize) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: 300.0.h),
+      child: Container(
+        height: widthSize,
         child: Center(
-          child: Image(
-            image: AssetImage(Place.values.elementAt(group.place!).image),
+          child: InteractiveViewer(
+            panEnabled: true,
+            scaleEnabled: true,
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: Image(
+                image: AssetImage(Place.values.elementAt(group.place!).image),
+              ),
+            ),
           ),
         ),
       ),
@@ -233,7 +384,7 @@ class _GroupDetailViewState extends State<GroupDetailView> {
   }
 
   Widget buildMenu(Group group) {
-    if (group.booth == Booth.major.key) {
+    if (group.menu != null) {
       return FoodListTile(menus: group.menu!);
     }
     return Container();
@@ -265,10 +416,11 @@ class _GroupDetailViewState extends State<GroupDetailView> {
   }
 
   Container buildStatusBadge() {
-    if (group.booth == Booth.major.key) {
+    if (group.booth == Booth.major.key || group.booth == Booth.congestion.key) {
       return Container(
         width: 40.0,
         height: 20.0,
+        margin: EdgeInsets.only(left: 20.0),
         decoration: BoxDecoration(
           color: statusColorBrain(group.status!),
           borderRadius: BorderRadius.all(
@@ -286,6 +438,7 @@ class _GroupDetailViewState extends State<GroupDetailView> {
       return Container(
         width: 70.0,
         height: 20.0,
+        margin: EdgeInsets.only(left: 20.0),
         decoration: BoxDecoration(
           color: Colors.black,
           borderRadius: BorderRadius.all(

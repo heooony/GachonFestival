@@ -6,7 +6,7 @@ import '../models/group.dart';
 
 class MainRepository {
   Future<void> getData(List<Group> groups) async {
-    final ref = FirebaseFirestore.instance.collection('majors').withConverter(
+    final ref = FirebaseFirestore.instance.collection('majors').orderBy('position').withConverter(
       fromFirestore: Group.fromFirestore,
       toFirestore: (Group major, _) => major.toFirestore(),
     );

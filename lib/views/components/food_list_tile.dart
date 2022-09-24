@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class FoodListTile extends StatelessWidget {
   FoodListTile({required this.menus});
 
-  LinkedHashMap<String, dynamic> menus;
+  Map<String, dynamic> menus;
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +41,13 @@ class FoodListTile extends StatelessWidget {
                         SizedBox(width: 10.0,)
                       ],
                     ),
-                  Text(
-                    menu['name'],
-                    style: TextStyle(
-                        fontSize: 15.0,
-                        color: menu['status'] == 1 ? Colors.black : Colors.grey),
+                  Expanded(
+                    child: Text(
+                      menu['name'],
+                      style: TextStyle(
+                          fontSize: 15.0,
+                          color: menu['status'] == 1 ? Colors.black : Colors.grey),
+                    ),
                   ),
                   Spacer(),
                   Text(

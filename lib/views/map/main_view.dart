@@ -1,27 +1,32 @@
 import 'dart:async';
 
+import 'package:banner_carousel/banner_carousel.dart';
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:untitled/models/group.dart';
 import 'package:untitled/repository/main_repository.dart';
+import 'package:untitled/repository/wadpik_admin_repository.dart';
+import 'package:untitled/utils/wad_analytics.dart';
 import 'package:untitled/views/search_view.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/place.dart';
 import '../components/detail_card.dart';
 import '../group_detail_view.dart';
 
 class MainView extends StatefulWidget {
   const MainView({Key? key}) : super(key: key);
+  static bool isMaster = false;
 
   @override
   State<MainView> createState() => _MainViewState();
 }
 
 class _MainViewState extends State<MainView> {
-  final TransformationController transformationController =
-      TransformationController();
   late final MainRepository _mainRepository;
+  PageController _pageController = PageController();
+
 
   Timer? timer;
   var time = 10;
@@ -35,14 +40,41 @@ class _MainViewState extends State<MainView> {
   List<Group> categoryGroup = [];
   int size = 0;
 
+  List<BannerModel> listBanners = [
+    BannerModel(id: "1", imagePath: 'assets/images/event.png'),
+    BannerModel(id: "2", imagePath: 'assets/images/event.png'),
+    BannerModel(id: "3", imagePath: 'assets/images/event.png'),
+    BannerModel(id: "4", imagePath: 'assets/images/event.png'),
+  ];
+
   late Future myFuture;
 
   @override
   void initState() {
     _mainRepository = MainRepository();
-    setInitialTransformation();
+    WadAnalytics.setUser();
     getAllData();
+    bannerTimer();
     super.initState();
+  }
+
+  Future<void> bannerTimer() async {
+    while (true) {
+      await Future.delayed(Duration(seconds: 10)).then((value) {
+        if (_pageController.page == 3) {
+          _pageController.jumpToPage(0);
+        }
+        _pageController.nextPage(
+            duration: Duration(seconds: 1), curve: Curves.easeInOut);
+      });
+    }
+  }
+
+  Future<void> _launchUrl() async {
+    Uri uri = Uri.parse('https://forms.gle/dBVzQ5mB366uhmWPA');
+    if (!await launchUrl(uri)) {
+      throw 'Could not launch $uri';
+    }
   }
 
   Future<void> refresh() async {
@@ -57,16 +89,10 @@ class _MainViewState extends State<MainView> {
     });
   }
 
-  void setInitialTransformation() {
-    final zoomFactor = 0.7;
-    transformationController.value.setEntry(0, 0, zoomFactor);
-    transformationController.value.setEntry(1, 1, zoomFactor);
-    transformationController.value.setEntry(2, 2, zoomFactor);
-    transformationController.value.setEntry(0, 3, 0.0);
-    transformationController.value.setEntry(1, 3, 0.0);
-  }
-
   getAllData() {
+    // myFuture = Future.delayed(Duration(seconds: 0));
+    // getInitialData();
+    // setAllData(0);
     myFuture = _mainRepository.getData(groups).then((value) {
       getInitialData();
       setAllData(0);
@@ -85,6 +111,11 @@ class _MainViewState extends State<MainView> {
         categoryGroup.add(group);
       }
     }
+    categoryGroup.sort((b, a) => a.openOrClose!.compareTo(b.openOrClose!));
+    categoryGroup.sort((a, b) => a.position!.compareTo(b.position!));
+    if(selectedCategory == 6) {
+      categoryGroup.sort((b, a) => a.position!.compareTo(b.position!));
+    }
     size = categoryGroup.length;
   }
 
@@ -98,6 +129,7 @@ class _MainViewState extends State<MainView> {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
     return FutureBuilder(
       future: myFuture,
       builder: (BuildContext context, AsyncSnapshot snapshot) {
@@ -113,14 +145,29 @@ class _MainViewState extends State<MainView> {
           return Container();
         }
         return Scaffold(
-          appBar: buildAppBar(),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          appBar: buildAppBar(context),
+          body: Stack(
             children: [
-              buildMainImage(),
-              buildCategoryButton(),
-              buildTotalText(),
-              buildListView(),
+              SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    buildMainImage(width),
+                    buildCategoryButton(),
+                    buildTotalText(),
+                    buildListView(),
+                    SizedBox(
+                      height: 80.0,
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  _launchUrl();
+                },
+                child: buildBottomBanner(width),
+              ),
             ],
           ),
         );
@@ -128,28 +175,40 @@ class _MainViewState extends State<MainView> {
     );
   }
 
-  Container buildMainImage() {
+  Column buildBottomBanner(double width) {
+    return Column(
+      children: [
+        Spacer(),
+        BannerCarousel.fullScreen(
+          pageController: _pageController,
+          borderRadius: 0.0,
+          height: 70.0,
+          banners: listBanners,
+          animation: false,
+          showIndicator: false,
+        ),
+      ],
+    );
+  }
+
+  Widget buildMainImage(double widthSize) {
     return Container(
-      height: 270.0.h,
+      height: widthSize,
       child: Stack(
         children: [
-          InteractiveViewer(
-            transformationController: transformationController,
-            minScale: 0.5,
-            constrained: false,
-            child: Center(
-              child: Image(
-                image: AssetImage(imagePath),
-              ),
+          AspectRatio(
+            aspectRatio: 1,
+            child: Image(
+              image: AssetImage(imagePath),
             ),
           ),
           GestureDetector(
             onTap: () {
-              if(isRefresh) {
+              if (isRefresh) {
                 refresh();
                 isRefresh = false;
                 timer = Timer.periodic(Duration(seconds: 1), (timer) {
-                  if(time == 0) {
+                  if (time == 0) {
                     timer.cancel();
                     isRefresh = true;
                     time = 10;
@@ -173,7 +232,13 @@ class _MainViewState extends State<MainView> {
                         blurRadius: 11,
                         spreadRadius: 0)
                   ]),
-              child: isRefresh ? Icon(Icons.refresh) : Center(child: Text("${time}", style: TextStyle(fontSize: 15.0),)),
+              child: isRefresh
+                  ? Icon(Icons.refresh)
+                  : Center(
+                      child: Text(
+                      "${time}",
+                      style: TextStyle(fontSize: 15.0),
+                    )),
             ),
           ),
         ],
@@ -205,6 +270,10 @@ class _MainViewState extends State<MainView> {
                 if (group.place == selectedCategory) {
                   categoryGroup.add(group);
                 }
+              }
+              categoryGroup.sort((b, a) => a.openOrClose!.compareTo(b.openOrClose!));
+              if(selectedCategory == 6) {
+                categoryGroup.sort((b, a) => a.position!.compareTo(b.position!));
               }
               size = categoryGroup.length;
               setImagePath();
@@ -240,33 +309,47 @@ class _MainViewState extends State<MainView> {
         horizontal: 20.0,
         vertical: 10.0,
       ),
-      child: Text(
-        "총 ${size}개의 부스",
-        style: TextStyle(color: Colors.grey),
-      ),
-    );
-  }
-
-  Expanded buildListView() {
-    return Expanded(
-      child: ListView.builder(
-        shrinkWrap: true,
-        itemCount: categoryGroup.length,
-        itemBuilder: (BuildContext context, int index) {
-          return GestureDetector(
-            onTap: () {
-              Get.to(() => GroupDetailView(callback: refresh), arguments: categoryGroup[index]);
-            },
-            child: DetailCard(
-              group: categoryGroup[index],
+      child: Row(
+        children: [
+          Text(
+            "총 ${size}개의 부스",
+            style: TextStyle(color: Colors.grey),
+          ),
+          Spacer(),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 2.0),
+            decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.7),
+                borderRadius: BorderRadius.all(Radius.circular(5.0))),
+            child: Text(
+              "3분마다 업데이트 됩니다!",
+              style: TextStyle(color: Colors.white),
             ),
-          );
-        },
+          )
+        ],
       ),
     );
   }
 
-  AppBar buildAppBar() {
+  Widget buildListView() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: categoryGroup.length,
+      itemBuilder: (BuildContext context, int index) {
+        return GestureDetector(
+          onTap: () {
+            Get.toNamed('/detail', arguments: [categoryGroup[index], refresh]);
+          },
+          child: DetailCard(
+            group: categoryGroup[index],
+          ),
+        );
+      },
+    );
+  }
+
+  AppBar buildAppBar(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.white,
       foregroundColor: Colors.black,
@@ -274,8 +357,7 @@ class _MainViewState extends State<MainView> {
       centerTitle: true,
       leading: GestureDetector(
         onTap: () {
-          final imageProvider =
-              Image.asset("assets/images/map/gachon-map.png").image;
+          final imageProvider = AssetImage("assets/images/map/gachon-map.png");
           showImageViewer(context, imageProvider, useSafeArea: true);
         },
         child: Icon(
@@ -286,7 +368,7 @@ class _MainViewState extends State<MainView> {
       actions: [
         GestureDetector(
           onTap: () {
-            Get.to(() => SearchView(), arguments: groups);
+            Get.toNamed('/search', arguments: groups);
           },
           child: Padding(
             padding: EdgeInsets.only(right: 15.0),
@@ -294,9 +376,13 @@ class _MainViewState extends State<MainView> {
           ),
         ),
       ],
-      title: Text(
-        'WadPik',
-        style: TextStyle(fontSize: 25.0),
+      title: GestureDetector(
+        child: Container(
+          height: 40.0,
+          child: Image(
+            image: AssetImage("assets/images/logo.png"),
+          ),
+        ),
       ),
     );
   }

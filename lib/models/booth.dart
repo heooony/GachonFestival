@@ -23,7 +23,7 @@ extension BoothExtension on Booth {
 
   String get name {
     switch (this) {
-      case Booth.major: return "학과 부스";
+      case Booth.major: return "야간 매점";
       case Booth.club: return "동아리";
       case Booth.foodTruck: return "푸드트럭";
       case Booth.fleaMarket: return "플리마켓";
